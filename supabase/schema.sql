@@ -58,9 +58,11 @@ create trigger cases_set_updated_at
 -- ─────────────────────────────────────────────
 -- 3. GRANT — 테이블 권한
 --    anon(비로그인)·public은 전부 회수, authenticated에만 CRUD 허용.
+--    Supabase는 새 테이블에 TRUNCATE·REFERENCES·TRIGGER까지 기본으로 주는데,
+--    TRUNCATE는 RLS를 무시하고 표 전체를 비우므로 authenticated에서도 일단 전부 회수합니다.
 --    실제 어떤 행에 접근할지는 아래 RLS가 결정합니다.
 -- ─────────────────────────────────────────────
-revoke all on table public.cases from public, anon;
+revoke all on table public.cases from public, anon, authenticated;
 grant select, insert, update, delete on table public.cases to authenticated;
 
 revoke all on function public.set_updated_at() from public, anon, authenticated;
