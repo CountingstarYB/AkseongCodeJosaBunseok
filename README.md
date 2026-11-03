@@ -4,7 +4,7 @@
 
 ## 바로 체험하기
 
-**https://countingstaryb.github.io/AkseongCodeJosaBunseok/?demo** — 로그인 없이 가상 예시 사례 5건으로 둘러봅니다.
+**https://akseongcodejosabunseok.vercel.app/?demo** — 로그인 없이 가상 예시 사례 5건으로 둘러봅니다.
 
 공개 시연 사이트에는 실제 사건 정보를 입력하지 마세요. 입력값은 그 브라우저에만 저장되고 어떤 서버로도 전송되지 않습니다.
 
