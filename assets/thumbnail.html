@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>썸네일</title>
+<!-- 갤러리 등록용 썸네일 원본 (1200×630). 브라우저로 열어 화면 캡처해 thumbnail.png로 저장 -->
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b101d;font-family:"Malgun Gothic",sans-serif}
+.card{width:1200px;height:630px;position:relative;overflow:hidden;color:#fff;
+  background:linear-gradient(125deg,#070c1a 0%,#18213d 40%,#243259 70%,#0d1530 100%)}
+.grid{position:absolute;inset:-20%;transform:rotate(-12deg);opacity:.5;
+  background-image:repeating-linear-gradient(0deg,rgba(110,175,255,.10) 0 1px,transparent 1px 48px),repeating-linear-gradient(90deg,rgba(110,175,255,.10) 0 1px,transparent 1px 48px)}
+.streak{position:absolute;height:2px;background:linear-gradient(90deg,transparent,rgba(120,195,255,.8),#fff,transparent);box-shadow:0 0 12px rgba(120,195,255,.8);transform:rotate(-12deg)}
+.left{position:absolute;left:64px;top:70px;width:520px}
+.brand{display:flex;align-items:center;gap:14px;font-size:14px;letter-spacing:4px;color:#9fc3f2}
+.brand img{height:64px}
+h1{font-size:50px;line-height:1.2;margin:26px 0 14px;letter-spacing:-1px}
+h1 em{font-style:normal;color:#ffd766}
+.tag{font-size:21px;line-height:1.6;color:#c9d6f0;margin:0 0 30px}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chips span{padding:8px 14px;border-radius:20px;font-size:16px;font-weight:700;background:rgba(255,255,255,.08);border:1px solid rgba(160,200,255,.35)}
+.right{position:absolute;right:56px;top:60px;width:540px}
+.panel{background:#f5f7fb;color:#1b2338;border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.45);overflow:hidden;border-top:5px solid #e6ae00}
+.ph{background:#243259;color:#fff;font-size:15px;font-weight:700;padding:10px 16px;display:flex;justify-content:space-between}
+.ph small{font-weight:400;color:#9fb5e0}
+.rows{padding:12px 16px 4px}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:15px;padding:6px 0;border-bottom:1px solid #e3e8f0}
+.row b{font-weight:600}
+.st{font-size:12px;font-weight:700;padding:3px 10px;border-radius:10px;color:#fff}
+.c{background:#b42318}.n{background:#17733a}.u{background:#b86a00}
+.arrow{text-align:center;font-size:22px;color:#4a90d9;margin:2px 0}
+.out{padding:4px 16px 16px;font-size:15px;line-height:1.75}
+.out p{margin:0}
+.out mark{background:#ffe9a8;padding:0 3px;border-radius:3px}
+.foot{position:absolute;left:64px;bottom:46px;font-size:15px;color:#9fb5e0;letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="grid"></div>
+  <div class="streak" style="left:-5%;top:58%;width:55%"></div>
+  <div class="streak" style="left:30%;top:88%;width:40%;opacity:.6"></div>
+  <div class="left">
+    <div class="brand"><img src="logo_cog.png" alt="">ROKAF · CYBER OPERATIONS</div>
+    <h1>악성코드 조사분석<br>보고서 <em>에이전트</em></h1>
+    <p class="tag">"그 외 악성행위는 없다"를 체크리스트로 <b>입증</b>하고<br>보고서에 붙여 넣을 문안을 자동으로 만듭니다</p>
+    <div class="chips"><span>행위 23종 · MITRE ATT&amp;CK</span><span>유사 사례 근거 검색</span><span>폐쇄망 단일 HTML</span></div>
+  </div>
+  <div class="right">
+    <div class="panel">
+      <div class="ph">악성행위 체크리스트 <small>확인됨 3 · 없음 확인 19 · 확인 불가 1</small></div>
+      <div class="rows">
+        <div class="row"><b>광고 팝업</b><span class="st c">확인됨</span></div>
+        <div class="row"><b>레지스트리 Run 키 등록 · T1547.001</b><span class="st n">없음 확인</span></div>
+        <div class="row"><b>파일 암호화 · T1486</b><span class="st n">없음 확인</span></div>
+        <div class="row"><b>추가 파일 다운로드 · T1105</b><span class="st u">확인 불가</span></div>
+      </div>
+      <div class="arrow">▼ 자동 생성</div>
+      <div class="out">
+        <p>- 광고 팝업, 브라우저 설정 변조 행위 확인됨</p>
+        <p>- <mark>그 외 지속성 확보, 정보 탈취, 확산, 파괴 행위는 확인되지 않음</mark></p>
+        <p>- 추가 파일 다운로드 여부는 네트워크 로그 미보존으로 확인 불가</p>
+        <p>- 2024.03.12. 생성, 패턴 업데이트 후 2026.10.30. 최초 탐지됨</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot">사례 기록 → 유사 사례 찾기 → 보고서 문안 복사 · 서버 전송 0건</div>
+</div>
+</body>
+</html>

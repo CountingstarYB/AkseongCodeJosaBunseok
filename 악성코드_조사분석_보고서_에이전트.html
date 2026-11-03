@@ -146,6 +146,18 @@ label.chk input{width:auto;box-shadow:none}
 .seg label.s-unchecked input:checked+span{background:#6b778a}
 .seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:-2px}
 .bnote{font-size:13px;padding:4px 8px}
+.attack{font:600 10px Consolas,monospace;padding:1px 5px;border-radius:4px;background:var(--brand-weak);color:var(--accent);border:1px solid var(--line);vertical-align:1px}
+.example-note{background:var(--brand-weak);border:1px dashed var(--line);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--muted);margin-bottom:12px}
+.example-note b{color:var(--text)}
+.simitem ul.why{margin:6px 0 0;padding-left:16px;font-size:12px;color:var(--accent)}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;padding:14px 14px 4px}
+.flow .step{flex:1 1 120px;max-width:220px;border:1px solid var(--line);border-top:3px solid var(--brand);border-radius:6px;padding:6px 8px;background:var(--panel-2);font-size:12px;box-shadow:0 1px 2px var(--btn-edge)}
+:root[data-theme="dark"] .flow .step{border-top-color:#4a62a8}
+.flow .step b{display:block;font-size:12px;color:var(--accent);margin-bottom:2px}
+.flow .step span{word-break:break-all}
+.flow .step.st-탐지{border-top-color:var(--gold)}
+.flow .step.st-피해{border-top-color:var(--danger)}
+.flow .arr{align-self:center;color:var(--muted);font-size:14px}
 
 table.rows{width:100%;border-collapse:collapse;margin-bottom:8px}
 table.rows th{font-size:12px;color:var(--muted);text-align:left;padding:4px 6px;font-weight:600}
@@ -382,6 +394,15 @@ mark.miss{background:var(--miss-bg);color:var(--miss-text);font-weight:700;paddi
 'use strict';
 
 /* ===================== 상수 ===================== */
+// 행위 태그 ↔ MITRE ATT&CK(Enterprise) 기법 번호. 유해(PUP) 행위는 대응 기법이 없어 비워 둠
+const ATTACK = {
+  run_key:'T1547.001', service:'T1543.003', schtask:'T1053.005', startup:'T1547.001',
+  c2:'T1071', downloader:'T1105', dns_tunnel:'T1071.004',
+  keylog:'T1056.001', browser_cred:'T1555.003', screenshot:'T1113', exfil:'T1041',
+  smb:'T1210', usb:'T1091', email_spread:'T1566.001',
+  encrypt:'T1486', shadow:'T1490', mining:'T1496',
+  inject:'T1055', av_kill:'T1562.001', obfusc:'T1027',
+};
 const TAG_GROUPS = [
   {name:'지속성', label:'지속성 확보', tags:[['run_key','레지스트리 Run 키 등록'],['service','서비스 등록'],['schtask','예약 작업 등록'],['startup','시작프로그램 폴더 등록']]},
   {name:'통신', label:'외부 통신', tags:[['c2','C2 비콘 통신'],['downloader','추가 파일 다운로드(드로퍼)'],['dns_tunnel','DNS 터널링']]},
@@ -390,7 +411,7 @@ const TAG_GROUPS = [
   {name:'파괴·금전', label:'파괴·금전', tags:[['encrypt','파일 암호화(랜섬웨어)'],['shadow','섀도복사본 삭제'],['mining','코인 채굴']]},
   {name:'은폐', label:'은폐', tags:[['inject','프로세스 인젝션'],['av_kill','백신 무력화'],['obfusc','난독화·패킹']]},
   {name:'유해', label:'유해', tags:[['adpopup','광고 팝업'],['browser_hijack','브라우저 설정 변조'],['bundle','번들 설치']]},
-].map((g, gi) => ({...g, idx: gi, tags: g.tags.map(([id, name]) => ({id, name, short: name.replace(/\(.*\)$/, ''), group: gi}))}));
+].map((g, gi) => ({...g, idx: gi, tags: g.tags.map(([id, name]) => ({id, name, short: name.replace(/\(.*\)$/, ''), group: gi, attack: ATTACK[id] || ''}))}));
 const ALL_TAGS = TAG_GROUPS.flatMap(g => g.tags);
 const TAG_BY_ID = Object.fromEntries(ALL_TAGS.map(t => [t.id, t]));
 
@@ -711,7 +732,7 @@ function behaviorHtml(c){
     TAG_GROUPS.map(g => `<div class="bgroup"><div class="bgname">${g.name}</div>${g.tags.map(t => {
       const b = bm[t.id];
       return `<div class="brow st-${b.status}" data-brow="${t.id}">
-        <div class="bname">${esc(t.name)}</div>
+        <div class="bname">${esc(t.name)}${t.attack ? ` <span class="attack" title="MITRE ATT&CK 기법 번호">${t.attack}</span>` : ''}</div>
         <div class="seg" role="radiogroup" aria-label="${esc(t.name)}">${STATUS.map(s => `<label class="s-${s.id}"><input type="radio" name="b_${t.id}" value="${s.id}" data-b="${t.id}"${b.status === s.id ? ' checked' : ''}><span>${s.label}</span></label>`).join('')}</div>
         <input class="bnote" data-bnote="${t.id}" value="${esc(b.note)}" placeholder="근거 메모 (확인 불가 시 사유, 예: 네트워크 로그 미보존으로)">
       </div>`;
@@ -742,6 +763,7 @@ function tlRowsHtml(c){
 function renderEdit(c){
   main.innerHTML = `
   <div class="page-head"><button data-act="home">← 목록</button><h2 id="editTitle"></h2></div>
+  ${c.id.startsWith('example-') ? `<div class="example-note">ⓘ 공개 분석 자료를 바탕으로 재구성한 <b>가상 예시 사례</b>입니다. 대상·분석관·일시는 가상이며, 메모에 "예시 값"으로 표시된 침해지표는 실제로 존재하지 않는 주소(.example 도메인, 문서용 IP 대역)입니다.${c.id === 'example-wannacry' ? ' WannaCry 해시·킬스위치 도메인은 공개 분석 보고서에 널리 인용된 값입니다.' : ''}</div>` : ''}
   ${sec('기본 정보', grid([
     fText('사례 제목', 'title', {full:true, ph:'예: OO부서 PC 광고성 프로그램 탐지'}),
     fText('사건번호', 'caseNo'), fText('분석일', 'analysisDate', {type:'date'}),
@@ -923,22 +945,27 @@ function features(c){
   };
 }
 const HASH_MATCH = 1000;
+// 점수와 함께 "왜 비슷한지" 근거 목록을 돌려준다
 function similarity(a, b){
-  if ((a.sha256 && a.sha256 === b.sha256) || (a.md5 && a.md5 === b.md5)) return HASH_MATCH;
+  if (a.sha256 && a.sha256 === b.sha256) return {score: HASH_MATCH, reasons: ['SHA256 일치 (동일 파일)']};
+  if (a.md5 && a.md5 === b.md5) return {score: HASH_MATCH, reasons: ['MD5 일치 (동일 파일)']};
+  const reasons = [];
   let ioc = 0;
-  const covered = new Set();
-  for (const u of a.urls) if (b.urls.has(u)) { ioc += 20; covered.add(hostOf(u)); }
-  for (const h of a.hosts) if (!covered.has(h) && b.hosts.has(h)) ioc += 10;
+  const covered = new Set(), urlHits = [], hostHits = [];
+  for (const u of a.urls) if (b.urls.has(u)) { ioc += 20; covered.add(hostOf(u)); urlHits.push(u); }
+  for (const h of a.hosts) if (!covered.has(h) && b.hosts.has(h)) { ioc += 10; hostHits.push(h); }
   ioc = Math.min(ioc, 50);
-  let inter = 0;
-  for (const t of a.tags) if (b.tags.has(t)) inter++;
-  const union = a.tags.size + b.tags.size - inter;
-  return ioc + (union ? inter / union * 50 : 0);
+  if (urlHits.length) reasons.push(`URL ${urlHits.length}건 일치`);
+  if (hostHits.length) reasons.push(`도메인·IP 일치: ${hostHits.slice(0, 2).map(defang).join(', ')}${hostHits.length > 2 ? ` 외 ${hostHits.length - 2}건` : ''}`);
+  const common = [...a.tags].filter(t => b.tags.has(t));
+  const union = a.tags.size + b.tags.size - common.length;
+  if (common.length) reasons.push(`공통 행위 ${common.length}개: ${common.slice(0, 3).map(t => TAG_BY_ID[t].short).join(', ')}${common.length > 3 ? ' 등' : ''}`);
+  return {score: ioc + (union ? common.length / union * 50 : 0), reasons};
 }
 function findSimilar(c, limit = 10){
   const fa = features(c);
   return cases.filter(x => x.id !== c.id)
-    .map(x => ({c: x, score: similarity(fa, features(x))}))
+    .map(x => ({c: x, ...similarity(fa, features(x))}))
     .filter(r => r.score > 0)
     .sort((p, q) => q.score - p.score || (q.c.analysisDate || '').localeCompare(p.c.analysisDate || ''))
     .slice(0, limit);
@@ -950,7 +977,8 @@ function showSimilar(){
     ? res.map((r, i) => `<div class="simitem" data-sim="${esc(r.c.id)}" title="클릭하여 읽기 전용으로 열람">
         <div class="rk">${i + 1}</div>
         <div><div class="tt">${esc(r.c.title) || '(제목 없음)'}</div>
-        <div class="mt">분석일 ${esc(fmtDate(r.c.analysisDate)) || '-'} · ${verdictBadge(r.c.verdict)}</div></div></div>`).join('')
+        <div class="mt">분석일 ${esc(fmtDate(r.c.analysisDate)) || '-'} · ${verdictBadge(r.c.verdict)}</div>
+        <ul class="why">${r.reasons.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div></div>`).join('')
     : '<div class="empty">유사 사례 없음</div>') +
     `<p class="muted" style="font-size:12px">해시 일치 → URL·도메인 일치 → 행위패턴(확인됨) 겹침 순으로 비슷한 사례를 최대 10건 표시합니다. 항목을 누르면 작성 중인 내용은 그대로 두고 읽기 전용으로 열람합니다.</p>`;
   $('#drawer').classList.add('open');
@@ -1087,6 +1115,7 @@ function buildReport(c){
     `- SHA256: ${c.sha256 || M('SHA256')}`,
     `- 탐지명: ${c.detectionName || M('탐지명')}`,
     `- 탐지경로: ${c.detectionPath || M('탐지경로')}`,
+    ...(conf.some(t => t.attack) ? [`- MITRE ATT&CK 기법: ${conf.filter(t => t.attack).map(t => `${t.attack}(${t.short})`).join(', ')}`] : []),
     '- 세부 작동과정',
     ...(c.behaviorDetail.trim() ? bullets(c.behaviorDetail, '  ') : ['  ' + M('세부 작동과정')]),
   ];
@@ -1111,11 +1140,19 @@ function buildReport(c){
 const fullText = secs => secs.map(s => `${s.head}\n${s.body}`).join('\n\n');
 const hl = text => esc(text).replace(/\[미입력: [^\]]*\]/g, m => `<mark class="miss">${m}</mark>`);
 
+// 개요도 문안("[유입] … → [실행] …")을 단계 상자로 그려 보여준다 (복사는 아래 문안 그대로)
+function flowHtml(body){
+  const steps = body.split(' → ').map(s => {
+    const m = /^\[([^\]]+)\]\s*(.*)$/.exec(s);
+    return m ? {k: m[1], v: m[2]} : {k: '', v: s};
+  });
+  return `<div class="flow">${steps.map((s, i) => `${i ? '<span class="arr">➜</span>' : ''}<div class="step st-${esc(s.k)}"><b>${esc(s.k)}</b><span>${hl(s.v)}</span></div>`).join('')}</div>`;
+}
 function renderReport(c){
   currentReport = buildReport(c);
   const all = [...currentReport.page1, ...currentReport.detail].map(s => s.body).join('\n');
   const missing = (all.match(/\[미입력: [^\]]*\]/g) || []).length;
-  const card = (s, key) => `<div class="rcard"><div class="rh"><h4>${esc(s.title)}</h4><button class="sm" data-copy="${key}">복사</button></div><pre>${hl(s.body)}</pre></div>`;
+  const card = (s, key) => `<div class="rcard"><div class="rh"><h4>${esc(s.title)}</h4><button class="sm" data-copy="${key}">복사</button></div>${key === 'detail:0' ? flowHtml(s.body) : ''}<pre>${hl(s.body)}</pre></div>`;
   main.innerHTML = `
     <div class="page-head">
       <button data-act="to-case" data-id="${esc(c.id)}">← 사례로 돌아가기</button>
