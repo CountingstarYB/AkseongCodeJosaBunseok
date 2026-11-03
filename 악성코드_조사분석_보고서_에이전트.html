@@ -69,6 +69,7 @@ header.top button.primary{color:var(--brand);border-color:#fff;background:linear
 :root[data-theme="dark"] header.top button.primary{color:#fff;border-color:#5a72b8;background:linear-gradient(#4a62a8,#34497f)}
 .banner{padding:8px 20px;font-size:13px;display:flex;gap:10px;align-items:center}
 .banner.warn{background:var(--warn-weak);color:var(--warn);border-bottom:1px solid var(--line)}
+.banner.info{background:var(--brand-weak);color:var(--text);border-bottom:1px solid var(--line)}
 .banner.error{background:var(--danger-weak);color:var(--danger);border-bottom:1px solid var(--line)}
 
 main{max-width:1180px;margin:0 auto;padding:20px 20px 40px;min-height:calc(100vh - 220px)}
@@ -238,6 +239,24 @@ mark.miss{background:var(--miss-bg);color:var(--miss-text);font-weight:700;paddi
 .login-note{margin-top:14px;padding:10px 12px;border-radius:6px;background:var(--brand-weak);color:var(--muted);font-size:12px;line-height:1.6;border:1px dashed var(--line)}
 .login-note b{color:var(--text)}
 .login-panel .lp-theme{position:absolute;top:14px;right:14px}
+.login-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;margin:14px 0 10px}
+.login-or::before,.login-or::after{content:"";flex:1;border-top:1px solid var(--line)}
+.demo-btn{width:100%;padding:10px;font-weight:700;color:var(--brand);border-color:var(--brand);white-space:normal}
+:root[data-theme="dark"] .demo-btn{color:#a9bdf0;border-color:#3a4f8a}
+.demo-btn small{display:block;font-weight:400;font-size:11px;color:var(--muted);margin-top:2px}
+.demo-badge{font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(230,174,0,.18);color:#ffd766;border:1px solid rgba(230,174,0,.45);white-space:nowrap}
+
+/* 처음 1분 체험 안내 */
+.guide{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:8px;padding:14px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.guide .gh{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.guide .gh h3{margin:0;font-size:15px;flex:1}
+.guide p{margin:0 0 10px;color:var(--muted);font-size:13px}
+.guide p b{color:var(--text)}
+.guide .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.guide .steps button{text-align:left;white-space:normal;padding:10px 12px;line-height:1.45}
+.guide .steps button b{display:block;font-size:14px;margin-bottom:2px}
+.guide .steps button span{font-size:12px;color:var(--muted)}
+@media (max-width:760px){.guide .steps{grid-template-columns:1fr}}
 
 @media (max-width:900px){
   #login{grid-template-columns:1fr;grid-template-rows:200px 1fr}
@@ -319,7 +338,9 @@ mark.miss{background:var(--miss-bg);color:var(--miss-text);font-weight:700;paddi
       <div class="login-err" id="loginErr" role="alert"></div>
       <button type="submit" class="primary">로그인</button>
     </form>
-    <div class="login-note"><b>초기 버전 안내</b><br>현재는 계정이 하나만 있습니다.<br>아이디 <b>admin</b> / 비밀번호 <b>admin</b></div>
+    <div class="login-or">또는</div>
+    <button type="button" class="demo-btn" data-act="demo">▶ 로그인 없이 체험하기<small>가상 예시 사례 5건으로 바로 둘러보기</small></button>
+    <div class="login-note"><b>초기 버전 · 체험용 계정</b><br>아이디 <b>admin</b> / 비밀번호 <b>admin</b><br>가상 데이터 시연 전용 계정입니다. 실제 운영 시에는 국방망 통합 인증으로 교체합니다.</div>
   </div>
 </div>
 
@@ -328,6 +349,7 @@ mark.miss{background:var(--miss-bg);color:var(--miss-text);font-weight:700;paddi
   <div class="brandbox" data-act="home" title="목록으로">
     <img data-asset="cog" alt="">
     <h1>악성코드 조사분석 보고서 에이전트<small>MALWARE ANALYSIS REPORT AGENT</small></h1>
+    <span class="demo-badge" id="demoBadge" hidden>체험 모드 · 가상 데이터</span>
   </div>
   <button class="primary" data-act="new">+ 새 사례</button>
   <button data-act="export">백업 내보내기</button>
@@ -336,6 +358,7 @@ mark.miss{background:var(--miss-bg);color:var(--miss-text);font-weight:700;paddi
   <button data-act="logout">로그아웃</button>
   <input type="file" id="importFile" accept=".json,application/json" hidden>
 </header>
+<div class="banner info" id="publicBanner" hidden>🔒 공개 시연 사이트입니다. 실제 사건·PC명·내부 IP 등은 입력하지 마세요. 입력한 내용은 이 브라우저에만 저장되며 어떤 서버로도 전송되지 않습니다(네트워크 요청 0건).</div>
 <div class="banner warn" id="backupBanner" hidden></div>
 <div class="banner error" id="errorBanner" hidden></div>
 <main id="main"></main>
@@ -578,6 +601,7 @@ function go(hash){ if (location.hash === hash) render(); else location.hash = ha
 window.addEventListener('hashchange', render);
 window.addEventListener('beforeunload', flushSave);
 
+let openSimilarAfterRender = false;
 function render(){
   if ($('#app').hidden) return;
   flushSave();
@@ -589,6 +613,7 @@ function render(){
     const c = cases.find(x => x.id === decodeURIComponent(m[1]));
     if (!c) return go('#list');
     cur = c; renderEdit(c);
+    if (openSimilarAfterRender) { openSimilarAfterRender = false; showSimilar(); }
   } else if ((m = /^#report\/(.+)$/.exec(h))) {
     const c = cases.find(x => x.id === decodeURIComponent(m[1]));
     if (!c) return go('#list');
@@ -616,8 +641,22 @@ function verdictBadge(v){
   const cls = v.startsWith('악성') ? 'v-악성' : v.includes('PUP') ? 'v-PUP' : v.startsWith('정상') ? 'v-정상' : '';
   return `<span class="badge ${cls}">${esc(v)}</span>`;
 }
+const GUIDE_CASE = 'example-pup';
+function guideHtml(){
+  if (settings.hideGuide) return '';
+  return `<div class="guide">
+    <div class="gh"><h3>처음 1분 체험</h3><button class="sm" data-act="hide-guide">다시 보지 않기</button></div>
+    <p>체크리스트로 <b>"그 외 악성행위는 확인되지 않음"을 입증</b>하고, 보고서 양식에 붙여 넣을 문안을 자동으로 만듭니다. 예시 사례 「(예시) 광고성 PUP」로 따라해 보세요.</p>
+    <div class="steps">
+      <button data-act="guide-case"><b>① 사례 열기</b><span>탐지 정보·유입경위·악성행위 체크리스트 23개 항목 확인</span></button>
+      <button data-act="guide-similar"><b>② 유사 사례 찾기</b><span>해시·도메인·행위패턴으로 과거 사례를 순위대로 검색</span></button>
+      <button class="primary" data-act="guide-report"><b>③ 보고서 문안 보기</b><span>패턴 업데이트 설명·"없음 확인" 문장까지 자동 생성 후 복사</span></button>
+    </div>
+  </div>`;
+}
 function renderList(){
   main.innerHTML = `
+    ${guideHtml()}
     <div class="searchbar">
       <input type="search" id="q" placeholder="해시, URL·도메인, 행위패턴 태그, 제목 키워드로 검색 (공백으로 여러 조건)" value="${esc(listQuery)}">
       <span class="muted" id="qcount"></span>
@@ -809,6 +848,13 @@ document.addEventListener('click', e => {
     case 'close-modal': return closeModal();
     case 'theme': return toggleTheme();
     case 'logout': return logout();
+    case 'demo': return startDemo();
+    case 'hide-guide': settings.hideGuide = true; saveSettings(); return renderList();
+    case 'guide-case': return go('#case/' + GUIDE_CASE);
+    case 'guide-report': return go('#report/' + GUIDE_CASE);
+    case 'guide-similar':
+      openSimilarAfterRender = true;
+      return go('#case/' + GUIDE_CASE);
     case 'add-ioc':
       cur.iocs.push({type:'url', value:'', note:''}); touch();
       $('#iocRows').innerHTML = iocRowsHtml(cur);
@@ -1376,9 +1422,21 @@ function showLogin(){
 function showApp(){
   $('#login').hidden = true;
   $('#app').hidden = false;
+  $('#demoBadge').hidden = readSession() !== DEMO_USER;
   renderBackupBanner();
   render();
 }
+// 체험 모드: 로그인 없이 가상 예시 데이터로 둘러보기 (?demo 주소로도 바로 진입)
+const DEMO_USER = 'demo';
+function startDemo(){
+  writeSession(DEMO_USER);
+  // 예시 사례가 없으면(삭제했거나 처음이 아닌 경우) 다시 채워 넣는다
+  SEED.forEach(s => { if (!cases.some(c => c.id === s.id)) cases.push(normalizeCase(s)); });
+  saveNow();
+  showApp();
+}
+// 공개 웹에 올린 시연 사이트에서는 실제 정보 입력 금지 안내
+const HOSTED = /^https?:$/.test(location.protocol) && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 $('#loginForm').addEventListener('submit', e => {
   e.preventDefault();
   const id = $('#loginId').value.trim(), pw = $('#loginPw').value;
@@ -1403,7 +1461,10 @@ window.addEventListener('DOMContentLoaded', () => {
   applyTheme();
   applyAssets();
   fillArtCode();
-  if (readSession()) showApp(); else showLogin();
+  $('#publicBanner').hidden = !HOSTED;
+  if (new URLSearchParams(location.search).has('demo')) startDemo();
+  else if (readSession()) showApp();
+  else showLogin();
 });
 </script>
 <script>
